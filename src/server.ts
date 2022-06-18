@@ -25,22 +25,22 @@ import {filterImageFromURL, deleteLocalFiles, isImage} from './util/util';
   //    1. validate the image_url query
   const { image_url } = req.query;
  //checking if image url exist and is a valid url and streaming the response
- //back to the client.
+ // back to the client
   if(image_url && isImage (image_url)){
     await filterImageFromURL(image_url)
     .then((data) => {    
-      const r = fs.createReadStream(data) 
-      const ps = new stream.PassThrough() 
+      const reading = fs.createReadStream(data) 
+      const passNew = new stream.PassThrough() 
       stream.pipeline(
-       r,
-       ps, 
+       reading,
+       passNew, 
        (err: any) => {
         if (err) {
           console.log(err) // No such file or any other kind of error
           return res.sendStatus(400); 
         }
       })
-      ps.pipe(res)
+      passNew.pipe(res)
       deleteLocalFiles([data])
 
     })
