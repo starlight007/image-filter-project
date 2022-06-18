@@ -26,7 +26,6 @@ export async function filterImageFromURL(inputURL: string): Promise<string> {
     }
   });
 }
-
 // deleteLocalFiles
 // helper function to delete files on the local disk
 // useful to cleanup after tasks
@@ -36,7 +35,4 @@ export async function deleteLocalFiles(files: Array<string>) {
   for (let file of files) {
     fs.unlinkSync(file);
   }
-}
-export function isImage(url: string) {
-  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url);
 }

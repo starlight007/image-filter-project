@@ -1,14 +1,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles, isImage} from './util/util';
+import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
 (async () => {
 
   // Init the Express application
   const app = express();
-  const fs = require('fs')
-  const stream = require('stream')
-
+  
   // Set the network port
   const port = process.env.PORT || 8082;
   
@@ -24,31 +22,25 @@ import {filterImageFromURL, deleteLocalFiles, isImage} from './util/util';
   //    1
   //    1. validate the image_url query
   const { image_url } = req.query;
- //checking if image url exist and is a valid url and streaming the response
- // back to the client
-  if(image_url && isImage (image_url)){
-    await filterImageFromURL(image_url)
-    .then((data) => {    
-      const reading = fs.createReadStream(data) 
-      const passNew = new stream.PassThrough() 
-      stream.pipeline(
-       reading,
-       passNew, 
-       (err: any) => {
-        if (err) {
-          console.log(err) // No such file or any other kind of error
-          return res.sendStatus(400); 
-        }
-      })
-      passNew.pipe(res)
-      deleteLocalFiles([data])
-
-    })
-    
-  } else{
-    return res.status(400).send("image_url query is not valid")
+ //checking if image url exist and if image_url is valid 
+  if(!image_url){
+  return res.status(400).send("image_url query is not valid")
   }
-    
+  
+  try {
+
+    const image_directory = await filterImageFromURL(image_url)
+
+    return res.sendFile(image_directory, async () => {
+      await deleteLocalFiles([image_directory])
+    })
+  }
+  catch (error) {
+    return res.status(406).send("image_url is not acceptable")
+  }
+
+  })
+ 
 
   //    2. call filterImageFromURL(image_url) to filter the image
   //    3. send the resulting file in the response
@@ -62,7 +54,6 @@ import {filterImageFromURL, deleteLocalFiles, isImage} from './util/util';
   /**************************************************************************** */
 
   //! END @TODO1
-})
   // Root Endpoint
   // Displays a simple message to the user
   app.get( "/", async ( req, res ) => {
